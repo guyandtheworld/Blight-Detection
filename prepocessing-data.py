@@ -5,7 +5,9 @@ from sklearn.preprocessing import LabelEncoder
 
 
 class Modify():
+
     def __init__(self):
+
         self.train_data = pd.read_csv("raw-data/soybean-train.csv")
         self.test_data = pd.read_csv("raw-data/soybean-test.csv")
 
@@ -15,6 +17,8 @@ class Modify():
         self.drop_rows_by_disease_name(rows_to_be_dropped)
 
         self.strings_to_digits("disease")
+
+        self.convert_object_to_integer()
 
         self.save()
 
@@ -31,6 +35,11 @@ class Modify():
         le = LabelEncoder()
         le.fit(np.unique(self.train_data[column]))
         self.train_data[column] = le.transform(self.train_data[column])
+
+    def convert_object_to_integer(self):
+        columns = self.train_data.columns
+        for column in columns:
+            self.train_data[column] = self.train_data[column].astype(str).astype(int)
 
     def save(self):
         self.train_data.to_csv("processed-data/soybean-train.csv", index=False)
