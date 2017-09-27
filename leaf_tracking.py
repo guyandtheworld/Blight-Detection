@@ -4,7 +4,8 @@ import cv2
  
 
 def detect_brown():
-    pass
+    lower_brown = [10, 100, 20]
+    upper_brown = [20, 255, 200]
 
 def detect_leaf(frame, x, y, w, h, diseased):
     color = "green"
