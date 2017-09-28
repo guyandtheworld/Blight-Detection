@@ -10,11 +10,13 @@ def detect_contour(mask):
     return cnts
 
 def detect_leaf(frame, x, y, w, h, diseased):
-    color = "green"
     hsv_color = (0, 255, 0)
+    font = cv2.FONT_HERSHEY_SIMPLEX
     if diseased:
-        color = "red"
         hsv_color = (0, 0, 255)
+        cv2.putText(frame,'Diseased',(10,300), font, 2,(255,255,255),2,cv2.LINE_AA)
+    else:
+        cv2.putText(frame,'Fine',(10,300), font, 2,(255,255,255),2,cv2.LINE_AA)
     w = w + w/5
     h = h + h/5
     cv2.rectangle(frame, (x, y), (x+w, y+h), hsv_color, 2)
@@ -70,8 +72,12 @@ def main():
         if len(cnts_green) > 0:
             mask = mask_green + mask_brown
             res = cv2.bitwise_and(frame, frame, mask=mask)
-            
-            cv2.imshow('res',res)
+            _, cnts, h = cv2.findContours(mask, cv2.RETR_TREE,
+                                cv2.CHAIN_APPROX_SIMPLE)            
+            cv2.drawContours(frame, max(cnts_green , key=cv2.contourArea), -1, (0,255,0), 3)
+            if len(cnts_brown) > 0:
+                if(h[0][0][2]>0):
+                    cv2.drawContours(frame, max(cnts_brown , key=cv2.contourArea), -1, (0,0,255), 3)
 
         cv2.imshow("Frame", frame)
         key = cv2.waitKey(1) & 0xFF
