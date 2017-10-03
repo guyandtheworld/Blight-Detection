@@ -12,11 +12,13 @@ def detect_contour(mask):
 def detect_leaf(frame, x, y, w, h, diseased):
     hsv_color = (0, 255, 0)
     font = cv2.FONT_HERSHEY_SIMPLEX
+    text_size = .5+float(w)/500*3
+    cv2.rectangle(frame, (x, y), (x+5, y+5), (0, 0, 0), 2)
     if diseased:
         hsv_color = (0, 0, 255)
-        cv2.putText(frame,'Diseased',(10,300), font, 2,(255,255,255),2,cv2.LINE_AA)
+        cv2.putText( frame, 'Infected', (x,y-10), font, text_size, (255,255,255), 2, cv2.LINE_AA)
     else:
-        cv2.putText(frame,'Fine',(10,300), font, 2,(255,255,255),2,cv2.LINE_AA)
+        cv2.putText( frame, 'Not-Infected', (x,y-10), font, text_size, (255,255,255), 2, cv2.LINE_AA)
     w = w + w/5
     h = h + h/5
     cv2.rectangle(frame, (x, y), (x+w, y+h), hsv_color, 2)
@@ -27,20 +29,33 @@ def detect_disease(cnts_brown):
         return True
     return False
 
-def draw_contours(cnts_green, cnts_brown, frame):
-    c = max(cnts_green , key=cv2.contourArea)
-    ((x, y), radius) = cv2.minEnclosingCircle(c)
-    (x, y, w, h) = cv2.boundingRect(c)    
-    diseased = True
-    if radius > 10:
-        diseased = detect_disease(cnts_brown)
-        detect_leaf(frame, x, y, w, h, diseased)
+def draw_contours(cnts_green, cnts_brown, frame, mask):
+    res = cv2.bitwise_and(frame, frame, mask=mask)
+    _, cnts, h = cv2.findContours(mask, cv2.RETR_TREE,
+                        cv2.CHAIN_APPROX_SIMPLE)            
+    cv2.drawContours(frame, max(cnts_green , key=cv2.contourArea), -1, (0,255,0), 3)
+    if len(cnts_brown) > 0:
+        if(h[0][0][2]>0):
+            cv2.drawContours(frame, max(cnts_brown , key=cv2.contourArea), -1, (0,0,255), 3)
+
+    c = [c for c in cnts_green if cv2.arcLength(c, True) > 500]
+
+    for c in c:
+        ((x, y), radius) = cv2.minEnclosingCircle(c)
+        (x, y, w, h) = cv2.boundingRect(c)    
+        diseased = True
+        if radius > 10:
+            diseased = detect_disease(cnts_brown)
+            detect_leaf(frame, x, y, w, h, diseased)
+
 
 def main():
 
-    greenLower = (29, 86, 6)
-    
-    greenUpper = (64, 255, 255)
+    sensitivity = 15
+
+    greenLower = (60 - sensitivity, 100, 100)
+
+    greenUpper = (60 + sensitivity, 255, 255)
 
     brownLower = (10, 100, 20)
 
@@ -66,18 +81,8 @@ def main():
         cnts_brown = detect_contour(mask_brown.copy())
 
         if len(cnts_green) > 0:
-            draw_contours(cnts_green, cnts_brown, frame)
-
-        # Testing
-        if len(cnts_green) > 0:
             mask = mask_green + mask_brown
-            res = cv2.bitwise_and(frame, frame, mask=mask)
-            _, cnts, h = cv2.findContours(mask, cv2.RETR_TREE,
-                                cv2.CHAIN_APPROX_SIMPLE)            
-            cv2.drawContours(frame, max(cnts_green , key=cv2.contourArea), -1, (0,255,0), 3)
-            if len(cnts_brown) > 0:
-                if(h[0][0][2]>0):
-                    cv2.drawContours(frame, max(cnts_brown , key=cv2.contourArea), -1, (0,0,255), 3)
+            draw_contours(cnts_green, cnts_brown, frame, mask)
 
         cv2.imshow("Frame", frame)
         key = cv2.waitKey(1) & 0xFF

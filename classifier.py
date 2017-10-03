@@ -9,11 +9,11 @@ from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
 from sklearn import tree
 
-import graphviz
+# import graphviz
 
 # Neural Network
 
-import tensorflow as tf
+# import tensorflow as tf
 
 class PreProcessData(object):
 
@@ -96,9 +96,9 @@ class Classifier(object):
         self.model = tree.DecisionTreeClassifier(max_depth=20)
         self.model.fit(self.train_x, self.train_y)
 
-        dot_data = tree.export_graphviz(self.model, out_file=None)
-        graph = graphviz.Source(dot_data)
-        graph.render("Soybean")
+        # dot_data = tree.export_graphviz(self.model, out_file=None)
+        # graph = graphviz.Source(dot_data)
+        # graph.render("Soybean")
         score = self.model.score(self.test_x, self.test_y)
         print("Accuracy: ", score)
 
